@@ -1,13 +1,13 @@
 import { Container, Graphics, Assets } from "pixi.js";
-import { manifest } from "../assets";
 import { IScene, Manager } from "../Manager";
-import { GameScene } from "./GameScene";
 
 export class LoaderScene extends Container implements IScene {
   // for making our loader graphics...
   private loaderBar: Container;
   private loaderBarBoder: Graphics;
   private loaderBarFill: Graphics;
+  public assetBundles: string[] = [];
+
   constructor() {
     super();
 
@@ -29,27 +29,10 @@ export class LoaderScene extends Container implements IScene {
     this.loaderBar.position.x = (Manager.width - this.loaderBar.width) / 2;
     this.loaderBar.position.y = (Manager.height - this.loaderBar.height) / 2;
     this.addChild(this.loaderBar);
-
-    this.initializeLoader().then(() => {
-      this.gameLoaded();
-    });
   }
 
-  private async initializeLoader(): Promise<void> {
-    await Assets.init({ manifest: manifest });
-
-    const bundleIds = manifest.bundles.map((bundle) => bundle.name);
-
-    await Assets.loadBundle(bundleIds, this.downloadProgress.bind(this));
-  }
-
-  private downloadProgress(progressRatio: number): void {
-    this.loaderBarFill.scale.x = progressRatio;
-  }
-
-  private gameLoaded(): void {
-    // Change scene to the game scene!
-    Manager.changeScene(new GameScene());
+  public constructorWithAssets(): void {
+    // To be a scene we must have the constructorWithAssets method even if we don't use it.
   }
 
   public update(framesPassed: number): void {

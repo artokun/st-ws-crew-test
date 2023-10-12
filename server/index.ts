@@ -1,10 +1,22 @@
 import { ServerParams } from "./types";
-import { serveStatic } from "./utils";
 import { serveWebsocket } from "./wss";
 
 export const server = Bun.serve<ServerParams>({
-  fetch: serveStatic,
+  port: 3001,
+  fetch: (req, server) => {
+    // TODO: Set up a pub/sub system for the server
+    // https://bun.sh/docs/api/websockets#pub-sub
+    if (
+      server.upgrade(req, {
+        data: {},
+      })
+    ) {
+      return;
+    }
+
+    return new Response("Upgrade failed :(", { status: 500 });
+  },
   websocket: serveWebsocket,
 });
 
-console.log(`Listening on localhost:${server.port}`);
+console.log(`WSS Listening on ws://localhost:${server.port}`);

@@ -1,4 +1,5 @@
-import { Application, DisplayObject } from "pixi.js";
+import { Application, Assets, DisplayObject } from "pixi.js";
+import { manifest } from "./assets";
 
 export class Manager {
   private constructor() {}
@@ -6,6 +7,7 @@ export class Manager {
   private static app: Application;
   private static currentScene: IScene;
 
+  public static ws: WebSocket;
   public static get width(): number {
     return Math.max(
       document.documentElement.clientWidth,
@@ -19,6 +21,9 @@ export class Manager {
     );
   }
 
+  private static initializeAssetsPromise: Promise<unknown>;
+  private static initializeWebsocketPromise: Promise<void>;
+
   // Use this function ONCE to start the entire machinery
   public static initialize(background: number): void {
     // Create our pixi app
@@ -30,6 +35,9 @@ export class Manager {
       backgroundColor: background,
     });
 
+    // Initialize the websocket
+    Manager.initializeWebsocketPromise = Manager.initializeWebsocket();
+
     // Add the ticker
     Manager.app.ticker.add(Manager.update);
 
@@ -38,6 +46,36 @@ export class Manager {
 
     // call it manually once so we are sure we are the correct size after starting
     Manager.resize();
+
+    // We store it to be sure we can use Assets later on
+    Manager.initializeAssetsPromise = Assets.init({ manifest: manifest });
+
+    // Black js magic to extract the bundle names into an array.
+    const bundleNames = manifest.bundles.map((b) => b.name);
+
+    // Initialize the assets and then start downloading the bundles in the background
+    Manager.initializeAssetsPromise.then(() =>
+      Assets.backgroundLoadBundle(bundleNames)
+    );
+  }
+
+  public static async initializeWebsocket(): Promise<void> {
+    if (Manager.ws) {
+      Manager.ws.close();
+    }
+
+    return new Promise((resolve) => {
+      Manager.ws = new WebSocket("ws://localhost:3001");
+      Manager.ws.onopen = () => {
+        console.log("WebSocket Client Connected");
+      };
+      Manager.ws.onmessage = ({ data }) => {
+        resolve();
+      };
+      Manager.ws.onclose = () => {
+        console.log("WebSocket Client Disconnected");
+      };
+    });
   }
 
   public static resize(): void {
@@ -83,14 +121,33 @@ export class Manager {
   }
 
   // Call this function when you want to go to a new scene
-  public static changeScene(newScene: IScene): void {
+  public static async changeScene(newScene: IScene): Promise<void> {
+    // let's make sure our Assets were initialized correctly
+    await Manager.initializeAssetsPromise;
+
     // Remove and destroy old scene... if we had one..
     if (Manager.currentScene) {
       Manager.app.stage.removeChild(Manager.currentScene);
       Manager.currentScene.destroy();
     }
 
-    // Add the new one
+    // If you were to show a loading thingy, this will be the place to show it...
+
+    // Now, let's start downloading the assets we need and wait for them...
+    await Promise.all([
+      Assets.loadBundle(newScene.assetBundles),
+      Manager.initializeWebsocketPromise,
+    ]);
+
+    // If you have shown a loading thingy, this will be the place to hide it...
+
+    // we listen for messages from the server
+    Manager.ws.addEventListener("message", newScene.message.bind(newScene));
+
+    // when we have assets and a stable socket connection, we tell that scene
+    newScene.constructorWithAwaits();
+
+    // we now store it and show it, as it is completely created
     Manager.currentScene = newScene;
     Manager.app.stage.addChild(Manager.currentScene);
   }
@@ -102,12 +159,13 @@ export class Manager {
     if (Manager.currentScene) {
       Manager.currentScene.update(framesPassed);
     }
-
-    // as I said before, I HATE the "frame passed" approach. I would rather use `Manager.app.ticker.deltaMS`
   }
 }
 
 export interface IScene extends DisplayObject {
   update(framesPassed: number): void;
   resize(screenWidth: number, screenHeight: number): void;
+  message<T>(message: MessageEvent<T>): void;
+  constructorWithAwaits(): void;
+  assetBundles: string[];
 }
