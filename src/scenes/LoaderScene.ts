@@ -2,6 +2,7 @@ import { Container, Graphics, Assets } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 
 export class LoaderScene extends Container implements IScene {
+  public name: string = "LoaderScene";
   // for making our loader graphics...
   private loaderBar: Container;
   private loaderBarBoder: Graphics;
@@ -31,15 +32,15 @@ export class LoaderScene extends Container implements IScene {
     this.addChild(this.loaderBar);
   }
 
-  public constructorWithAssets(): void {
+  public constructorWithAwaits(): void {
     // To be a scene we must have the constructorWithAssets method even if we don't use it.
+  }
+
+  public message(message: MessageEvent): void {
+    // To be a scene we must have the message method even if we don't use it.
   }
 
   public update(framesPassed: number): void {
     // To be a scene we must have the update method even if we don't use it.
-  }
-
-  public resize(screenWidth: number, screenHeight: number): void {
-    // To be a scene we must have the resize method even if we don't use it.
   }
 }

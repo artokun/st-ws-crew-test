@@ -1,5 +1,9 @@
-import { Application, Assets, DisplayObject } from "pixi.js";
+import { Application, Assets, DisplayObject, Graphics, Point } from "pixi.js";
+import { Viewport } from "pixi-viewport";
 import { manifest } from "./assets";
+
+const WORLD_WIDTH = 2000;
+const WORLD_HEIGHT = 2000;
 
 export class Manager {
   private constructor() {}
@@ -7,18 +11,25 @@ export class Manager {
   private static app: Application;
   private static currentScene: IScene;
 
+  public static viewport: Viewport;
   public static ws: WebSocket;
-  public static get width(): number {
+  public static get screenWidth(): number {
     return Math.max(
       document.documentElement.clientWidth,
       window.innerWidth || 0
     );
   }
-  public static get height(): number {
+  public static get screenHeight(): number {
     return Math.max(
       document.documentElement.clientHeight,
       window.innerHeight || 0
     );
+  }
+  public static get width(): number {
+    return Manager.viewport.worldWidth;
+  }
+  public static get height(): number {
+    return Manager.viewport.worldHeight;
   }
 
   private static initializeAssetsPromise: Promise<unknown>;
@@ -34,6 +45,52 @@ export class Manager {
       autoDensity: true,
       backgroundColor: background,
     });
+
+    // Initialize pixi debugger
+    // @ts-ignore
+    window.__PIXI_APP__ = Manager.app;
+
+    // Create the viewport
+    Manager.viewport = new Viewport({
+      screenWidth: Manager.screenWidth,
+      screenHeight: Manager.screenHeight,
+      worldWidth: WORLD_WIDTH,
+      worldHeight: WORLD_HEIGHT,
+      events: Manager.app.renderer.events,
+      passiveWheel: false,
+    });
+
+    // Create world boundaries
+    Manager.viewport
+      .drag()
+      .pinch()
+      .wheel()
+      .decelerate()
+      .clamp({
+        left: false,
+        right: false,
+        top: false,
+        bottom: false,
+        direction: "all",
+        underflow: "center",
+      })
+      .clampZoom({
+        minWidth: WORLD_WIDTH / 4,
+        minHeight: WORLD_HEIGHT / 4,
+        maxWidth: WORLD_WIDTH,
+        maxHeight: WORLD_HEIGHT,
+      })
+      .setZoom(1)
+      .moveCenter(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
+
+    // Draw the world boundaries
+    const worldBoundaries = new Graphics();
+    worldBoundaries.lineStyle(10, 0x0, 1);
+    worldBoundaries.drawRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    Manager.viewport.addChild(worldBoundaries);
+
+    // Add the viewport to the app
+    Manager.app.stage.addChild(Manager.viewport);
 
     // Initialize the websocket
     Manager.initializeWebsocketPromise = Manager.initializeWebsocket();
@@ -79,8 +136,12 @@ export class Manager {
   }
 
   public static resize(): void {
-    if (Manager.currentScene) {
-      Manager.currentScene.resize(Manager.width, Manager.height);
+    Manager.viewport.resize(Manager.screenWidth, Manager.screenHeight);
+
+    // Recenter the viewport if it is smaller than the world
+    if (Manager.viewport.screenWorldWidth < Manager.viewport.worldWidth) {
+      Manager.viewport.fitWorld();
+      Manager.viewport.moveCenter(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
     }
 
     // current screen size
@@ -95,13 +156,13 @@ export class Manager {
 
     // uniform scale for our game
     const scale = Math.min(
-      screenWidth / Manager.width,
-      screenHeight / Manager.height
+      screenWidth / Manager.screenWidth,
+      screenHeight / Manager.screenHeight
     );
 
     // the "uniformly englarged" size for our game
-    const enlargedWidth = Math.floor(scale * Manager.width);
-    const enlargedHeight = Math.floor(scale * Manager.height);
+    const enlargedWidth = Math.floor(scale * Manager.screenWidth);
+    const enlargedHeight = Math.floor(scale * Manager.screenHeight);
 
     // margins for centering our game
     const horizontalMargin = (screenWidth - enlargedWidth) / 2;
@@ -127,7 +188,7 @@ export class Manager {
 
     // Remove and destroy old scene... if we had one..
     if (Manager.currentScene) {
-      Manager.app.stage.removeChild(Manager.currentScene);
+      Manager.viewport.removeChild(Manager.currentScene);
       Manager.currentScene.destroy();
     }
 
@@ -149,7 +210,7 @@ export class Manager {
 
     // we now store it and show it, as it is completely created
     Manager.currentScene = newScene;
-    Manager.app.stage.addChild(Manager.currentScene);
+    Manager.viewport.addChild(Manager.currentScene);
   }
 
   // This update will be called by a pixi ticker and tell the scene that a tick happened
@@ -163,8 +224,8 @@ export class Manager {
 }
 
 export interface IScene extends DisplayObject {
+  name: string;
   update(framesPassed: number): void;
-  resize(screenWidth: number, screenHeight: number): void;
   message<T>(message: MessageEvent<T>): void;
   constructorWithAwaits(): void;
   assetBundles: string[];

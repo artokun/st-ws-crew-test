@@ -1,45 +1,60 @@
-import { Container, IDestroyOptions, Sprite } from "pixi.js";
+import { Container, Graphics, IDestroyOptions, Sprite } from "pixi.js";
 import { IScene, Manager } from "../Manager";
+import { PlayerScene } from "./PlayerScene";
 
 export class GameScene extends Container implements IScene {
-  name: string = "GameScene";
+  public name: string = "GameScene";
   assetBundles: string[] = ["game", "sounds"];
-  bunny!: Sprite;
+  gridGraphics!: Container;
 
   constructor() {
     super(); // Mandatory! This calls the superclass constructor.
   }
 
   constructorWithAwaits(): void {
-    // This creates a texture from a 'bunny.png' image
-    this.bunny = Sprite.from("bunny");
-
-    this.bunny.anchor.set(0.5);
-    this.bunny.x = Manager.width / 2;
-    this.bunny.y = Manager.height / 2;
-
-    this.addChild(this.bunny);
+    this.createGrid();
 
     Manager.ws.send("ping");
   }
 
-  update(framesPassed: number): void {
-    // rotate the bunny
-    this.bunny.rotation += 0.01;
+  update(framesPassed: number): void {}
+
+  createGrid(): void {
+    this.gridGraphics = new Container();
+    this.addChild(this.gridGraphics);
+
+    const gridSize = 50;
+    const gridWidth = Manager.width / gridSize;
+    const gridHeight = Manager.height / gridSize;
+
+    // make main axis double width
+    const graphics = new Graphics();
+    graphics.lineStyle(2, 0x000000, 1);
+    graphics.moveTo(Manager.width / 2, 0);
+    graphics.lineTo(Manager.width / 2, Manager.height);
+    graphics.moveTo(0, Manager.height / 2);
+    graphics.lineTo(Manager.width, Manager.height / 2);
+    this.gridGraphics.addChild(graphics);
+
+    // make grid
+    for (let i = 0; i < gridWidth; i++) {
+      for (let j = 0; j < gridHeight; j++) {
+        const graphics = new Graphics();
+        graphics.lineStyle(1, 0x000000, 0.5);
+        graphics.drawRect(0, 0, gridSize, gridSize);
+        graphics.position.x = i * gridSize;
+        graphics.position.y = j * gridSize;
+        this.gridGraphics.addChild(graphics);
+      }
+    }
   }
 
   message(message: MessageEvent): void {
     console.log(`${this.name}: ${message.data}`);
-  }
-
-  resize(screenWidth: number, screenHeight: number): void {
-    // We can use bunny here because it is a class member!
-    this.bunny.x = screenWidth / 2;
-    this.bunny.y = screenHeight / 2;
+    this.addChild(new PlayerScene("test"));
   }
 
   destroy(options?: boolean | IDestroyOptions | undefined): void {
-    this.bunny.destroy();
     Manager.ws.removeEventListener("message", this.message);
   }
 }
