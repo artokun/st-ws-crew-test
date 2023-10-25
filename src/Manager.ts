@@ -1,4 +1,4 @@
-import { Application, Assets, DisplayObject, Graphics, Point } from "pixi.js";
+import { Application, Assets, DisplayObject, Graphics } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { manifest } from "./assets";
 
@@ -117,22 +117,32 @@ export class Manager {
   }
 
   public static async initializeWebsocket(): Promise<void> {
+    console.log("Initializing GameServer connection");
     if (Manager.ws) {
       Manager.ws.close();
     }
 
-    return new Promise((resolve) => {
-      Manager.ws = new WebSocket("ws://localhost:3001");
-      Manager.ws.onopen = () => {
-        console.log("WebSocket Client Connected");
-      };
-      Manager.ws.onmessage = ({ data }) => {
-        resolve();
-      };
-      Manager.ws.onclose = () => {
-        console.log("WebSocket Client Disconnected");
-      };
-    });
+    let timeout: NodeJS.Timeout;
+
+    return Promise.race<void>([
+      new Promise((resolve) => {
+        Manager.ws = new WebSocket("ws://localhost:3001");
+        Manager.ws.onopen = () => {
+          console.log("GameServer connection established");
+          clearTimeout(timeout);
+          resolve();
+        };
+        Manager.ws.onclose = () => {
+          console.log("GameServer connection closed");
+        };
+      }),
+      new Promise((reject) => {
+        timeout = setTimeout(() => {
+          console.log("GameServer connection timed out. retrying...");
+          reject();
+        }, 5000);
+      }),
+    ]).catch(() => Manager.initializeWebsocket());
   }
 
   public static resize(): void {

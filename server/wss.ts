@@ -1,20 +1,32 @@
 import { ServerWebSocket, WebSocketHandler } from "bun";
 import { ServerParams } from "./types";
-
-declare global {
-  var ws: ServerWebSocket<unknown> | undefined;
-}
+import { wss } from ".";
 
 export const serveWebsocket: WebSocketHandler<ServerParams> = {
   perMessageDeflate: true,
   open: async (ws) => {
-    globalThis.ws = ws;
-
-    ws.send("Hello from the server!");
+    ws.subscribe("server");
+    send(ws, ws.data.id);
+  },
+  close: async (ws) => {
+    ws.unsubscribe("server");
   },
   async message(ws, message) {
     if (message === "ping") {
       ws.send("pong");
     }
   },
+};
+
+export const broadcast = (message: string, sender = "server:broadcast") => {
+  wss.publish(sender, JSON.stringify({ sender, message }));
+  console.log(`Broadcast: ${message}`);
+};
+
+export const send = (
+  ws: ServerWebSocket<ServerParams>,
+  message: string,
+  sender = "server:direct"
+) => {
+  ws.send(JSON.stringify({ sender, message }));
 };

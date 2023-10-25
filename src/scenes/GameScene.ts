@@ -1,4 +1,4 @@
-import { Container, Graphics, IDestroyOptions, Sprite } from "pixi.js";
+import { Container, Graphics, IDestroyOptions } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { PlayerScene } from "./PlayerScene";
 
