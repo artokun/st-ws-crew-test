@@ -50,8 +50,37 @@ export class GameScene extends Container implements IScene {
   }
 
   message(message: MessageEvent): void {
-    console.log(`${this.name}: ${message.data}`);
-    this.addChild(new PlayerScene("test"));
+    switch (typeof message.data) {
+      case "string":
+        console.log(`${this.name}: ${message.data}`);
+        break;
+      case "object":
+        const fileReader = new FileReader();
+        fileReader.readAsArrayBuffer(message.data);
+        fileReader.onload = () => {
+          const data = new Float32Array(fileReader.result as ArrayBuffer);
+          const [action, id, x, y] = data;
+          switch (action) {
+            case 0:
+              console.log(`Add ${id} at ${x}, ${y}`);
+              break;
+            case 1:
+              console.log(`Remove ${id}`);
+              break;
+            case 2:
+              // console.log(`Move ${id} to ${x}, ${y}`);
+              let child = this.getChildByName(`PlayerScene ${id}`);
+              if (!child) {
+                child = this.addChild(new PlayerScene(id, x, y));
+              }
+              child.position.set(x, y);
+              break;
+          }
+        };
+        break;
+      default:
+        console.log(`${this.name}: ${message.data}`);
+    }
   }
 
   destroy(options?: boolean | IDestroyOptions | undefined): void {

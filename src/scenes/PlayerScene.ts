@@ -3,21 +3,22 @@ import { IScene, Manager } from "../Manager";
 
 export class PlayerScene extends Container implements IScene {
   public name: string = "PlayerScene";
-  public id: string;
+  public id: number;
   public assetBundles: string[] = [];
   public g!: Graphics;
 
-  constructor(id: string) {
+  constructor(id: number, x: number, y: number) {
     super();
     this.id = id;
+    this.name = `PlayerScene ${id}`;
     this.g = new Graphics();
     this.g.beginFill(0xff0000);
     this.g.drawCircle(0, 0, 20);
     this.g.endFill();
     this.addChild(this.g);
 
-    this.x = Manager.width / 2;
-    this.y = Manager.height / 2;
+    this.x = x || Manager.width / 2;
+    this.y = y || Manager.height / 2;
   }
 
   public constructorWithAwaits(): void {}
