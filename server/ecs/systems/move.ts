@@ -1,11 +1,10 @@
-import { Commands, Entity, Query, Res, With } from "thyseus";
+import { Entity, Query, Res, With } from "thyseus";
 import { Velocity } from "../components/velocity";
 import { Position } from "../components/position";
 import { WSS } from "../resources/wss";
 import { IsPlayer } from "../components/is-player";
 
 export function moveSystem(
-  commands: Commands,
   players: Query<
     [Entity, Position, Velocity],
     With<Position, Velocity, IsPlayer>

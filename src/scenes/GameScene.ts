@@ -14,7 +14,7 @@ export class GameScene extends Container implements IScene {
   constructorWithAwaits(): void {
     this.createGrid();
 
-    Manager.ws.send("ping");
+    Manager.ws.send("connected");
   }
 
   update(framesPassed: number): void {}

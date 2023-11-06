@@ -3,8 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "watch:ts": "bunx --bun vite --host",
-    "watch:wss": "bun run --hot server/index.ts",
+    "watch:client": "bunx --bun vite --host",
+    "watch:server": "nodemon --ext ts --watch ./server --exec \"bun run server/index.ts\"",
     "dev": "concurrently \"npm:watch:*\""
   },
   "devDependencies": {
@@ -15,11 +15,14 @@
   },
   "dependencies": {
     "@thyseus/rollup-plugin-thyseus": "0.15.0",
+    "bun": "latest",
+    "eventemitter3": "^5.0.1",
+    "nodemon": "^3.0.1",
     "pixi-viewport": "^5.0.2",
     "pixi.js": "7.3.1",
     "react": "^18.2.0",
     "thyseus": "0.15.0",
-    "typescript": "^5.2.2",
-    "vite": "^4.4.11"
+    "typescript": "latest",
+    "vite": "latest"
   }
 }

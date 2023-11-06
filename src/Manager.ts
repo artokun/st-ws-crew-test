@@ -133,7 +133,11 @@ export class Manager {
           resolve();
         };
         Manager.ws.onclose = () => {
-          console.log("GameServer connection closed");
+          console.log("GameServer connection closed, retrying...");
+          // attempt to reconnect in 5 seconds
+          setTimeout(() => {
+            Manager.initializeWebsocket();
+          }, 1000);
         };
       }),
       new Promise((reject) => {

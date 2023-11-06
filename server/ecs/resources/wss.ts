@@ -3,8 +3,10 @@ import { ServerParams } from "../../types";
 import { Server, ServerWebSocket } from "bun";
 import { Entity, struct } from "thyseus";
 import { Position } from "../components/position";
+import { emitter } from "../../emitter";
 
 let wss: Server;
+let clients = new Map<string, ServerWebSocket<ServerParams>>([]);
 
 @struct
 export class WSS {
@@ -29,14 +31,19 @@ export class WSS {
         perMessageDeflate: true,
         open: async (ws) => {
           ws.subscribe("server");
-          this.send(ws, ws.data.id);
+          clients.set(ws.data.id, ws);
         },
         close: async (ws) => {
           ws.unsubscribe("server");
+          clients.delete(ws.data.id);
+          emitter.clientDisconnected(ws.data.id);
         },
         async message(ws, message) {
           if (message === "ping") {
             ws.send("pong");
+          }
+          if (message === "connected") {
+            emitter.clientConnected(ws.data.id);
           }
         },
       },
@@ -47,8 +54,12 @@ export class WSS {
     return wss.port;
   }
 
-  send(ws: ServerWebSocket<ServerParams>, message: string, sender = "server") {
-    ws.send(JSON.stringify({ sender, message }));
+  send(clientId: string, message: string, sender = "server") {
+    const ws = clients.get(clientId);
+    if (ws) {
+      console.log(`Send (${sender}) to (${clientId}): ${message}`);
+      ws.send(JSON.stringify({ sender, message }));
+    }
   }
 
   broadcast(message: string, sender = "server") {
