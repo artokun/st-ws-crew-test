@@ -4,7 +4,10 @@ import { moveSystem } from "./systems/move";
 import { spawnSystem } from "./systems/spawn";
 import { websocketSystem } from "./systems/websocket";
 import { websocketListenerSystem } from "./events/connectionEvents";
-import { initialStateSystem } from "./systems/initialState";
+import {
+  handleClientConnectSystem,
+  handleClientDisconnectSystem,
+} from "./systems/initialState";
 
 const world = await World.new()
   .addSystemsToSchedule(
@@ -15,7 +18,12 @@ const world = await World.new()
     applyCommands,
     loopSystem
   )
-  .addSystems(initialStateSystem, moveSystem, applyCommands)
+  .addSystems(
+    handleClientDisconnectSystem,
+    handleClientConnectSystem,
+    moveSystem,
+    applyCommands
+  )
   .build();
 
 world.start();

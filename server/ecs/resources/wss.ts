@@ -67,6 +67,28 @@ export class WSS {
     console.log(`Broadcast (${sender}): ${message}`);
   }
 
+  // [ActionType.InitialState, pos.length, id, x, y, id, x, y, ...]
+  sendInitialState(
+    clientId: string,
+    positions: { id: string; position: { x: number; y: number } }[]
+  ) {
+    const ws = clients.get(clientId);
+    if (ws) {
+      const positionsArray = new Float32Array(positions.length * 3);
+      positions.forEach((p, i) => {
+        positionsArray[i * 3] = parseInt(p.id, 10);
+        positionsArray[i * 3 + 1] = p.position.x;
+        positionsArray[i * 3 + 2] = p.position.y;
+      });
+      const data = new Float32Array([
+        ActionType.InitialState,
+        positions.length,
+        ...positionsArray,
+      ]);
+      ws.send(data);
+    }
+  }
+  // [ActionType.Add, id, x, y]
   moveEntity(entity: Readonly<Entity>, pos: Position) {
     wss.publish(
       "server",
@@ -84,4 +106,5 @@ export enum ActionType {
   Add,
   Remove,
   Move,
+  InitialState,
 }

@@ -24,12 +24,10 @@ export function websocketListenerSystem(
   disconectEvent: EventWriter<DisconnectEvent>
 ) {
   function connectHandler(clientId: string) {
-    console.log("client connected", clientId);
     connectEvent.create(new ConnectEvent(clientId));
   }
 
   function disconnectHandler(clientId: string) {
-    console.log("client disconnected", clientId);
     disconectEvent.create(new DisconnectEvent(clientId));
   }
 

@@ -33,7 +33,7 @@ export class Manager {
   }
 
   private static initializeAssetsPromise: Promise<unknown>;
-  private static initializeWebsocketPromise: Promise<void>;
+  private static initializeWebsocketPromise?: Promise<void>;
 
   // Use this function ONCE to start the entire machinery
   public static initialize(background: number): void {
@@ -66,13 +66,12 @@ export class Manager {
       .pinch()
       .wheel()
       .decelerate()
+      .moveCenter(0, 0)
       .clamp({
-        left: false,
-        right: false,
-        top: false,
-        bottom: false,
-        direction: "all",
-        underflow: "center",
+        left: -WORLD_WIDTH,
+        right: WORLD_WIDTH,
+        top: -WORLD_HEIGHT,
+        bottom: WORLD_HEIGHT,
       })
       .clampZoom({
         minWidth: WORLD_WIDTH / 4,
@@ -80,14 +79,7 @@ export class Manager {
         maxWidth: WORLD_WIDTH,
         maxHeight: WORLD_HEIGHT,
       })
-      .setZoom(1)
-      .moveCenter(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
-
-    // Draw the world boundaries
-    const worldBoundaries = new Graphics();
-    worldBoundaries.lineStyle(10, 0x0, 1);
-    worldBoundaries.drawRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    Manager.viewport.addChild(worldBoundaries);
+      .setZoom(1);
 
     // Add the viewport to the app
     Manager.app.stage.addChild(Manager.viewport);
@@ -120,6 +112,8 @@ export class Manager {
     console.log("Initializing GameServer connection");
     if (Manager.ws) {
       Manager.ws.close();
+      // @ts-ignore
+      Manager.ws = undefined;
     }
 
     let timeout: NodeJS.Timeout;
@@ -134,9 +128,9 @@ export class Manager {
         };
         Manager.ws.onclose = () => {
           console.log("GameServer connection closed, retrying...");
-          // attempt to reconnect in 5 seconds
+
           setTimeout(() => {
-            Manager.initializeWebsocket();
+            location.reload();
           }, 1000);
         };
       }),
@@ -155,7 +149,8 @@ export class Manager {
     // Recenter the viewport if it is smaller than the world
     if (Manager.viewport.screenWorldWidth < Manager.viewport.worldWidth) {
       Manager.viewport.fitWorld();
-      Manager.viewport.moveCenter(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
+      // Manager.viewport.moveCenter(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
+      Manager.viewport.moveCenter(0, 0);
     }
 
     // current screen size
