@@ -4,6 +4,7 @@ import { Server, ServerWebSocket } from "bun";
 import { Entity, struct } from "thyseus";
 import { Position } from "../components/position";
 import { emitter } from "../../emitter";
+import { ByteBuffer } from "flatbuffers";
 
 let wss: Server;
 let clients = new Map<string, ServerWebSocket<ServerParams>>([]);
@@ -28,7 +29,6 @@ export class WSS {
         return new Response("Upgrade failed :(", { status: 500 });
       },
       websocket: {
-        perMessageDeflate: true,
         open: async (ws) => {
           ws.subscribe("server");
           clients.set(ws.data.id, ws);
@@ -65,6 +65,13 @@ export class WSS {
   broadcast(message: string, sender = "server") {
     wss.publish(sender, JSON.stringify({ sender, message }));
     console.log(`Broadcast (${sender}): ${message}`);
+  }
+
+  sendBuffer(clientId: string, buffer: Uint8Array) {
+    const ws = clients.get(clientId);
+    if (ws) {
+      ws.sendBinary(buffer, true);
+    }
   }
 
   // [ActionType.InitialState, pos.length, id, x, y, id, x, y, ...]

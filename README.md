@@ -3,6 +3,7 @@
 To install dependencies:
 
 ```bash
+brew install flatbuffers
 bun install
 ```
 

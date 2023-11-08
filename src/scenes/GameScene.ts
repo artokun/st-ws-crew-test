@@ -1,6 +1,8 @@
 import { Container, Graphics, IDestroyOptions } from "pixi.js";
+import * as flatbuffers from "flatbuffers";
 import { IScene, Manager } from "../Manager";
 import { PlayerScene } from "./PlayerScene";
+import { GameState, MessageType } from "../flatbuffers/game-state";
 
 export class GameScene extends Container implements IScene {
   public name: string = "GameScene";
@@ -51,51 +53,29 @@ export class GameScene extends Container implements IScene {
     }
   }
 
-  message(message: MessageEvent): void {
+  async message(message: MessageEvent) {
     switch (typeof message.data) {
       case "string":
         console.log(`${this.name}: ${message.data}`);
         break;
       case "object":
-        const fileReader = new FileReader();
-        fileReader.readAsArrayBuffer(message.data);
-        fileReader.onload = () => {
-          const data = new Float32Array(fileReader.result as ArrayBuffer);
-          const [action, ...rest] = data;
-          switch (action) {
-            case 0:
-              let [addId, addX, addY] = rest;
-              console.log(`Add ${addId} at ${addX}, ${addY}`);
-              break;
-            case 1:
-              let [removeId] = rest;
-              console.log(`Remove ${removeId}`);
-              break;
-            case 2:
-              // console.log(`Move ${id} to ${x}, ${y}`);
-              let [moveId, moveX, moveY] = rest;
-              let child = this.getChildByName(`PlayerScene ${moveId}`);
-              if (!child) {
-                child = this.addChild(new PlayerScene(moveId, moveX, moveY));
-              }
-              child.position.set(moveX, moveY);
-              break;
-            case 3:
-              let [posLength, ...positions] = rest;
-              for (let i = 0; i < posLength; i++) {
-                let id = positions[i * 3];
-                let x = positions[i * 3 + 1];
-                let y = positions[i * 3 + 2];
-                console.log(`Add ${id} at ${x}, ${y}`);
-                let child = this.getChildByName(`PlayerScene ${id}`);
-                if (!child) {
-                  child = this.addChild(new PlayerScene(id, x, y));
-                }
-                child.position.set(x, y);
-              }
-              break;
-          }
-        };
+        const buffer = new Uint8Array(await message.data.arrayBuffer());
+        const game = GameState.getRootAsGameState(
+          new flatbuffers.ByteBuffer(buffer)
+        ).unpack();
+        switch (game.messageType) {
+          case MessageType.InitialState:
+            for (const player of game.players) {
+              this.addChild(
+                new PlayerScene(
+                  player.id,
+                  player.position!.x,
+                  player.position!.y
+                )
+              );
+            }
+            break;
+        }
         break;
       default:
         console.log(`${this.name}: ${message.data}`);

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "watch:client": "bunx --bun vite --host",
-    "watch:server": "nodemon --ext ts --watch ./server --exec \"bun run server/index.ts\"",
+    "watch:server": "nodemon --ext ts --delay 0.1 --watch ./server --exec \"bun run server/index.ts\"",
+    "watch:fltbuf": "nodemon --ext fbs --watch ./schema --exec \"sh lib/generate-fbb.sh\"",
     "dev": "concurrently \"npm:watch:*\""
   },
   "devDependencies": {
@@ -17,6 +18,7 @@
     "@thyseus/rollup-plugin-thyseus": "0.15.0",
     "bun": "latest",
     "eventemitter3": "^5.0.1",
+    "flatbuffers": "^23.5.26",
     "nodemon": "^3.0.1",
     "pixi-viewport": "^5.0.2",
     "pixi.js": "7.3.1",

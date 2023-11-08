@@ -8,6 +8,7 @@ export class PlayerScene extends Container implements IScene {
   public g!: Graphics;
 
   constructor(id: number, x: number, y: number) {
+    console.log(x, y);
     super();
     this.id = id;
     this.name = `PlayerScene ${id}`;
@@ -17,8 +18,8 @@ export class PlayerScene extends Container implements IScene {
     this.g.endFill();
     this.addChild(this.g);
 
-    this.x = x || Manager.width / 2;
-    this.y = y || Manager.height / 2;
+    this.x = x;
+    this.y = y;
   }
 
   public constructorWithAwaits(): void {}

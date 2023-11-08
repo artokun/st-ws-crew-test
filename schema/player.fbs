@@ -1,0 +1,25 @@
+namespace flatbuffers.gameState;
+
+enum MessageType : byte {
+  InitialState = 0,
+  PlayerJoined = 1,
+  PlayerLeft = 2,
+  PlayerMoved = 3,
+}
+
+struct Vec2 {
+  x: float;
+  y: float;
+}
+
+table Player {
+  id: uint;
+  position: Vec2;
+}
+
+table GameState {
+  message_type: MessageType;
+  players: [Player];
+}
+
+root_type GameState;
