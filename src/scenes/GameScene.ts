@@ -66,13 +66,7 @@ export class GameScene extends Container implements IScene {
         switch (game.messageType) {
           case MessageType.InitialState:
             for (const player of game.players) {
-              this.addChild(
-                new PlayerScene(
-                  player.id,
-                  player.position!.x,
-                  player.position!.y
-                )
-              );
+              this.addChild(new PlayerScene(player));
             }
             break;
         }

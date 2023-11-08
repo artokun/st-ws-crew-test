@@ -2,6 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { State } from '../../flatbuffers/game-state/state.js';
 import { Vec2, Vec2T } from '../../flatbuffers/game-state/vec2.js';
 
 
@@ -28,21 +29,59 @@ id():number {
   return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 }
 
-position(obj?:Vec2):Vec2|null {
+name():string|null
+name(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+name(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+state():State {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : State.Idle;
+}
+
+color():number {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+}
+
+angle():number {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+}
+
+position(obj?:Vec2):Vec2|null {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? (obj || new Vec2()).__init(this.bb_pos + offset, this.bb!) : null;
 }
 
 static startPlayer(builder:flatbuffers.Builder) {
-  builder.startObject(2);
+  builder.startObject(6);
 }
 
 static addId(builder:flatbuffers.Builder, id:number) {
   builder.addFieldInt32(0, id, 0);
 }
 
+static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, nameOffset, 0);
+}
+
+static addState(builder:flatbuffers.Builder, state:State) {
+  builder.addFieldInt8(2, state, State.Idle);
+}
+
+static addColor(builder:flatbuffers.Builder, color:number) {
+  builder.addFieldInt32(3, color, 0);
+}
+
+static addAngle(builder:flatbuffers.Builder, angle:number) {
+  builder.addFieldFloat32(4, angle, 0.0);
+}
+
 static addPosition(builder:flatbuffers.Builder, positionOffset:flatbuffers.Offset) {
-  builder.addFieldStruct(1, positionOffset, 0);
+  builder.addFieldStruct(5, positionOffset, 0);
 }
 
 static endPlayer(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -54,6 +93,10 @@ static endPlayer(builder:flatbuffers.Builder):flatbuffers.Offset {
 unpack(): PlayerT {
   return new PlayerT(
     this.id(),
+    this.name(),
+    this.state(),
+    this.color(),
+    this.angle(),
     (this.position() !== null ? this.position()!.unpack() : null)
   );
 }
@@ -61,6 +104,10 @@ unpack(): PlayerT {
 
 unpackTo(_o: PlayerT): void {
   _o.id = this.id();
+  _o.name = this.name();
+  _o.state = this.state();
+  _o.color = this.color();
+  _o.angle = this.angle();
   _o.position = (this.position() !== null ? this.position()!.unpack() : null);
 }
 }
@@ -68,13 +115,23 @@ unpackTo(_o: PlayerT): void {
 export class PlayerT implements flatbuffers.IGeneratedObject {
 constructor(
   public id: number = 0,
+  public name: string|Uint8Array|null = null,
+  public state: State = State.Idle,
+  public color: number = 0,
+  public angle: number = 0.0,
   public position: Vec2T|null = null
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const name = (this.name !== null ? builder.createString(this.name!) : 0);
+
   Player.startPlayer(builder);
   Player.addId(builder, this.id);
+  Player.addName(builder, name);
+  Player.addState(builder, this.state);
+  Player.addColor(builder, this.color);
+  Player.addAngle(builder, this.angle);
   Player.addPosition(builder, (this.position !== null ? this.position!.pack(builder) : 0));
 
   return Player.endPlayer(builder);

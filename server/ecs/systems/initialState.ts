@@ -12,6 +12,10 @@ import {
   Vec2,
 } from "../../flatbuffers/game-state";
 
+const COLORS = [
+  0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xff00ff, 0x000000,
+];
+
 export function handleClientConnectSystem(
   commands: Commands,
   players: Query<[Entity, Position], With<IsPlayer, Position>>,
@@ -27,6 +31,7 @@ export function handleClientConnectSystem(
   for (const [entity, position] of players) {
     Player.startPlayer(builder);
     Player.addId(builder, Number(entity.id));
+    Player.addColor(builder, COLORS[Number(entity.id) % COLORS.length]);
     Player.addPosition(
       builder,
       Vec2.createVec2(builder, position.x, position.y)

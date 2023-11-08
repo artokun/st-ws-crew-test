@@ -1,5 +1,6 @@
 import { Container, Graphics } from "pixi.js";
-import { IScene, Manager } from "../Manager";
+import { IScene } from "../Manager";
+import { PlayerT } from "../flatbuffers/game-state";
 
 export class PlayerScene extends Container implements IScene {
   public name: string = "PlayerScene";
@@ -7,19 +8,27 @@ export class PlayerScene extends Container implements IScene {
   public assetBundles: string[] = [];
   public g!: Graphics;
 
-  constructor(id: number, x: number, y: number) {
-    console.log(x, y);
+  constructor(player: PlayerT) {
     super();
-    this.id = id;
-    this.name = `PlayerScene ${id}`;
+    this.id = Number(player.id);
+    this.name = `PlayerScene ${player.id}`;
     this.g = new Graphics();
-    this.g.beginFill(0xff0000);
-    this.g.drawCircle(0, 0, 20);
+    this.g.beginFill(player.color || 0x000000);
+    this.g.drawCircle(0, 0, 25);
     this.g.endFill();
     this.addChild(this.g);
 
-    this.x = x;
-    this.y = y;
+    // draw heading triangle inside circle
+    this.g.lineStyle(1, 0xffffff);
+    this.g.beginFill(0x000000);
+    this.g.moveTo(0, -25);
+    this.g.lineTo(10, 0);
+    this.g.lineTo(-10, 0);
+    this.g.lineTo(0, -25);
+
+    this.x = player.position?.x || 0;
+    this.y = player.position?.y || 0;
+    this.angle = player.angle || 0;
   }
 
   public constructorWithAwaits(): void {}
