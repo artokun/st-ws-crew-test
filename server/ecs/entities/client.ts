@@ -2,9 +2,9 @@ import { struct } from "thyseus";
 
 @struct
 export class Client {
-  wsClientId: string = "";
+  id: string;
 
-  static from(wsClientId: string): Client {
-    return Object.assign(new this(), { wsClientId });
+  constructor(id = "") {
+    this.id = id;
   }
 }

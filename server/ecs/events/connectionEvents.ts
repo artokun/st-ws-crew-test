@@ -1,21 +1,23 @@
 import { EventWriter, struct } from "thyseus";
 import { emitter } from "../../emitter";
+import { ServerWebSocket } from "bun";
+import { ServerParams } from "../../types";
 
 @struct
 export class ConnectEvent {
-  wsClientId: string;
+  clientId: string;
 
-  constructor(wsClientId = "") {
-    this.wsClientId = wsClientId;
+  constructor(clientId: string) {
+    this.clientId = clientId;
   }
 }
 
 @struct
 export class DisconnectEvent {
-  wsClientId: string;
+  clientId: string;
 
-  constructor(wsClientId = "") {
-    this.wsClientId = wsClientId;
+  constructor(clientId: string) {
+    this.clientId = clientId;
   }
 }
 
@@ -23,12 +25,12 @@ export function websocketListenerSystem(
   connectEvent: EventWriter<ConnectEvent>,
   disconectEvent: EventWriter<DisconnectEvent>
 ) {
-  function connectHandler(clientId: string) {
-    connectEvent.create(new ConnectEvent(clientId));
+  function connectHandler(ws: ServerWebSocket<ServerParams>) {
+    connectEvent.create(new ConnectEvent(ws.data.id));
   }
 
-  function disconnectHandler(clientId: string) {
-    disconectEvent.create(new DisconnectEvent(clientId));
+  function disconnectHandler(ws: ServerWebSocket<ServerParams>) {
+    disconectEvent.create(new DisconnectEvent(ws.data.id));
   }
 
   emitter.onClientConnected(connectHandler);

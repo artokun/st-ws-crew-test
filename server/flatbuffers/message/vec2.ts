@@ -2,9 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-
-
-export class Vec2 implements flatbuffers.IUnpackableObject<Vec2T> {
+export class Vec2 {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
   __init(i:number, bb:flatbuffers.ByteBuffer):Vec2 {
@@ -32,32 +30,4 @@ static createVec2(builder:flatbuffers.Builder, x: number, y: number):flatbuffers
   return builder.offset();
 }
 
-
-unpack(): Vec2T {
-  return new Vec2T(
-    this.x(),
-    this.y()
-  );
-}
-
-
-unpackTo(_o: Vec2T): void {
-  _o.x = this.x();
-  _o.y = this.y();
-}
-}
-
-export class Vec2T implements flatbuffers.IGeneratedObject {
-constructor(
-  public x: number = 0.0,
-  public y: number = 0.0
-){}
-
-
-pack(builder:flatbuffers.Builder): flatbuffers.Offset {
-  return Vec2.createVec2(builder,
-    this.x,
-    this.y
-  );
-}
 }

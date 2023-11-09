@@ -1,0 +1,60 @@
+namespace flatbuffers.message;
+
+enum UnitState : byte {
+  Idle,
+  Moving
+}
+
+enum ClientAction : byte {
+  Joined,
+  Left
+}
+
+// Structs
+
+struct Vec2 {
+  x: float;
+  y: float;
+}
+
+// Game Tables
+table Unit {
+  id: uint;
+  name: string;
+  controlled_by: Client;
+  state: UnitState = 0;
+  position: Vec2;
+}
+
+table Client {
+  id: string;
+  name: string;
+}
+
+table NoOpEvent {}
+
+table InitClientEvent {
+  client: Client;
+}
+
+table ClientUpdateEvent {
+  action: ClientAction;
+  client: Client;
+}
+
+table InitStateEvent {
+  units: [Unit];
+}
+
+union MessageType {
+  NoOpEvent,
+  InitClientEvent,
+  InitStateEvent,
+  ClientUpdateEvent
+}
+
+table Message {
+  message: MessageType;
+}
+
+root_type Message;

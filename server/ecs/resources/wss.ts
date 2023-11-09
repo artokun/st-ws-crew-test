@@ -1,26 +1,24 @@
-import { randomUUID } from "crypto";
 import { ServerParams } from "../../types";
 import { Server, ServerWebSocket } from "bun";
-import { Entity, struct } from "thyseus";
-import { Position } from "../components/position";
+import { struct } from "thyseus";
 import { emitter } from "../../emitter";
-import { ByteBuffer } from "flatbuffers";
+import { randomUUID } from "crypto";
 
+let clients: Map<string, ServerWebSocket<ServerParams>>;
 let wss: Server;
-let clients = new Map<string, ServerWebSocket<ServerParams>>([]);
 
 @struct
 export class WSS {
   async initialize() {
+    clients = new Map<string, ServerWebSocket<ServerParams>>();
     wss = Bun.serve<ServerParams>({
       port: 3001,
       fetch: (req, server) => {
-        // TODO: Set up a pub/sub system for the server
-        // https://bun.sh/docs/api/websockets#pub-sub
         if (
           server.upgrade(req, {
             data: {
               id: randomUUID(),
+              authToken: null,
             },
           })
         ) {
@@ -36,18 +34,22 @@ export class WSS {
         close: async (ws) => {
           ws.unsubscribe("server");
           clients.delete(ws.data.id);
-          emitter.clientDisconnected(ws.data.id);
+          emitter.clientDisconnected(ws);
         },
         async message(ws, message) {
           if (message === "ping") {
             ws.send("pong");
           }
           if (message === "connected") {
-            emitter.clientConnected(ws.data.id);
+            emitter.clientConnected(ws);
           }
         },
       },
     });
+  }
+
+  get clients() {
+    return clients;
   }
 
   get port(): number {
@@ -67,51 +69,14 @@ export class WSS {
     console.log(`Broadcast (${sender}): ${message}`);
   }
 
-  sendBuffer(clientId: string, buffer: Uint8Array) {
+  broadcastBuffer(buffer: Uint8Array, topic = "server") {
+    wss.publish(topic, buffer);
+  }
+
+  sendBuffer(buffer: Uint8Array, clientId: string) {
     const ws = clients.get(clientId);
     if (ws) {
       ws.sendBinary(buffer, true);
     }
   }
-
-  // [ActionType.InitialState, pos.length, id, x, y, id, x, y, ...]
-  sendInitialState(
-    clientId: string,
-    positions: { id: string; position: { x: number; y: number } }[]
-  ) {
-    const ws = clients.get(clientId);
-    if (ws) {
-      const positionsArray = new Float32Array(positions.length * 3);
-      positions.forEach((p, i) => {
-        positionsArray[i * 3] = parseInt(p.id, 10);
-        positionsArray[i * 3 + 1] = p.position.x;
-        positionsArray[i * 3 + 2] = p.position.y;
-      });
-      const data = new Float32Array([
-        ActionType.InitialState,
-        positions.length,
-        ...positionsArray,
-      ]);
-      ws.send(data);
-    }
-  }
-  // [ActionType.Add, id, x, y]
-  moveEntity(entity: Readonly<Entity>, pos: Position) {
-    wss.publish(
-      "server",
-      new Float32Array([
-        ActionType.Move,
-        parseInt(entity.id.toString(), 10),
-        pos.x,
-        pos.y,
-      ]).buffer
-    );
-  }
-}
-
-export enum ActionType {
-  Add,
-  Remove,
-  Move,
-  InitialState,
 }

@@ -1,8 +1,14 @@
 import { Container, Graphics, IDestroyOptions } from "pixi.js";
 import * as flatbuffers from "flatbuffers";
 import { IScene, Manager } from "../Manager";
-import { PlayerScene } from "./PlayerScene";
-import { GameState, MessageType } from "../flatbuffers/game-state";
+import {
+  ClientAction,
+  ClientUpdateEventT,
+  InitClientEventT,
+  Message,
+  MessageType,
+} from "../flatbuffers/message";
+import { ClientUpdateEvent } from "../../server/flatbuffers/message";
 
 export class GameScene extends Container implements IScene {
   public name: string = "GameScene";
@@ -60,14 +66,24 @@ export class GameScene extends Container implements IScene {
         break;
       case "object":
         const buffer = new Uint8Array(await message.data.arrayBuffer());
-        const game = GameState.getRootAsGameState(
+        const event = Message.getRootAsMessage(
           new flatbuffers.ByteBuffer(buffer)
         ).unpack();
-        switch (game.messageType) {
-          case MessageType.InitialState:
-            for (const player of game.players) {
-              this.addChild(new PlayerScene(player));
-            }
+        console.log(event);
+
+        switch (event.messageType) {
+          case MessageType.InitClientEvent:
+            const initClientMessage = event.message as InitClientEventT;
+            Manager.ws.clientId = String(initClientMessage.client?.id);
+            console.log("CLIENT ID:", initClientMessage.client?.id);
+            break;
+          case MessageType.ClientUpdateEvent:
+            const clientUpdateMessage = event.message as ClientUpdateEventT;
+            console.log(
+              `Client ${clientUpdateMessage.client?.name} (${
+                clientUpdateMessage.client?.id
+              } just ${ClientAction[clientUpdateMessage.action]})`
+            );
             break;
         }
         break;

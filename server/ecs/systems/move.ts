@@ -13,6 +13,5 @@ export function moveSystem(
 ) {
   for (const [entity, pos, vel] of players) {
     pos.add(vel);
-    server.moveEntity(entity, pos);
   }
 }

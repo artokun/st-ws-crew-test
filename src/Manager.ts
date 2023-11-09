@@ -5,6 +5,10 @@ import { manifest } from "./assets";
 const WORLD_WIDTH = 2000;
 const WORLD_HEIGHT = 2000;
 
+interface GameWebSocket extends WebSocket {
+  clientId: string;
+}
+
 export class Manager {
   private constructor() {}
 
@@ -12,7 +16,7 @@ export class Manager {
   private static currentScene: IScene;
 
   public static viewport: Viewport;
-  public static ws: WebSocket;
+  public static ws: GameWebSocket;
   public static get screenWidth(): number {
     return Math.max(
       document.documentElement.clientWidth,
@@ -120,7 +124,7 @@ export class Manager {
 
     return Promise.race<void>([
       new Promise((resolve) => {
-        Manager.ws = new WebSocket("ws://localhost:3001");
+        Manager.ws = new WebSocket("ws://localhost:3001") as GameWebSocket;
         Manager.ws.onopen = () => {
           console.log("GameServer connection established");
           clearTimeout(timeout);

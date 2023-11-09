@@ -3,4 +3,4 @@
 
 # generate flatbuffers schema
 flatc --gen-object-api -o src/ --ts schema/*.fbs
-flatc --gen-object-api -o server/ --ts schema/*.fbs
+flatc -o server/ --ts schema/*.fbs

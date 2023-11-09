@@ -3,64 +3,41 @@ import flatbuffers from "flatbuffers";
 import { ConnectEvent, DisconnectEvent } from "../events/connectionEvents";
 import { WSS } from "../resources/wss";
 import { Client } from "../entities/client";
-import { IsPlayer } from "../components/is-player";
-import { Position } from "../components/position";
 import {
-  GameState,
+  Client as ClientFB,
+  InitClientEvent,
+  Message,
   MessageType,
-  Player,
-  Vec2,
-} from "../../flatbuffers/game-state";
-
-const COLORS = [
-  0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xff00ff, 0x000000,
-];
+} from "../../flatbuffers/message";
 
 export function handleClientConnectSystem(
-  commands: Commands,
-  players: Query<[Entity, Position], With<IsPlayer, Position>>,
   connectEvents: EventReader<ConnectEvent>,
+  commands: Commands,
   wss: Res<WSS>
 ) {
   if (connectEvents.length === 0) return;
 
-  let builder = new flatbuffers.Builder(1);
-
-  const playersPositions = [];
-
-  for (const [entity, position] of players) {
-    Player.startPlayer(builder);
-    Player.addId(builder, Number(entity.id));
-    Player.addColor(builder, COLORS[Number(entity.id) % COLORS.length]);
-    Player.addPosition(
-      builder,
-      Vec2.createVec2(builder, position.x, position.y)
-    );
-    playersPositions.push(Player.endPlayer(builder));
-  }
-
-  const playersVector = GameState.createPlayersVector(
-    builder,
-    playersPositions
-  );
-
-  GameState.startGameState(builder);
-  GameState.addMessageType(builder, MessageType.InitialState);
-  GameState.addPlayers(builder, playersVector);
-  const gameState = GameState.endGameState(builder);
-  builder.finish(gameState);
-  const buffer = builder.asUint8Array();
-
-  const game = GameState.getRootAsGameState(
-    new flatbuffers.ByteBuffer(buffer)
-  ).unpack();
-
-  console.log(JSON.stringify(game));
-
   for (const client of connectEvents) {
-    commands.spawn().add(Client.from(client.wsClientId));
-    wss.sendBuffer(client.wsClientId, buffer);
-    wss.broadcast(`Player ${client.wsClientId} connected`);
+    commands.spawn().add(new Client(client.clientId));
+    console.log("spawned", client.clientId);
+
+    // Build Message ... tediously
+    const builder = new flatbuffers.Builder(1);
+    const id = builder.createString(client.clientId);
+    ClientFB.startClient(builder);
+    ClientFB.addId(builder, id);
+    const clientFb = ClientFB.endClient(builder);
+    InitClientEvent.startInitClientEvent(builder);
+    InitClientEvent.addClient(builder, clientFb);
+    const eventFb = InitClientEvent.endInitClientEvent(builder);
+    Message.startMessage(builder);
+    Message.addMessageType(builder, MessageType.InitClientEvent);
+    Message.addMessage(builder, eventFb);
+    const messageFb = Message.endMessage(builder);
+    builder.finish(messageFb);
+    const messageBuffer = builder.asUint8Array();
+    wss.sendBuffer(messageBuffer, client.clientId);
+    wss.broadcast(`Client ${client.clientId} connected`);
   }
 
   connectEvents.clear();
@@ -76,14 +53,16 @@ export function handleClientDisconnectSystem(
 
   const disconnectingClients = [];
   for (const disconnectClient of disconnectEvents) {
-    disconnectingClients.push(disconnectClient.wsClientId);
+    disconnectingClients.push(disconnectClient.clientId);
   }
 
   if (disconnectingClients.length > 0) {
     for (const [entity, client] of clients) {
-      if (disconnectingClients.includes(client.wsClientId)) {
+      console.log(disconnectingClients, client.id);
+      if (disconnectingClients.includes(client.id)) {
         commands.despawn(entity);
-        wss.broadcast(`Player ${client.wsClientId} disconnected`);
+        console.log("despawned", client.id);
+        wss.broadcast(`Client ${client.id} disconnected`);
       }
     }
   }
