@@ -1,17 +1,12 @@
-import { Entity, Query, Res, With } from "thyseus";
+import { Query, With } from "thyseus";
 import { Velocity } from "../components/velocity";
 import { Position } from "../components/position";
-import { WSS } from "../resources/wss";
-import { IsPlayer } from "../components/is-player";
+import { IsUnit } from "../components/is-unit";
 
 export function moveSystem(
-  players: Query<
-    [Entity, Position, Velocity],
-    With<Position, Velocity, IsPlayer>
-  >,
-  server: Res<WSS>
+  players: Query<[Position, Velocity], With<Position, Velocity, IsUnit>>
 ) {
-  for (const [entity, pos, vel] of players) {
+  for (const [pos, vel] of players) {
     pos.add(vel);
   }
 }

@@ -2,7 +2,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { Client, ClientT } from '../../flatbuffers/message/client.js';
 import { UnitState } from '../../flatbuffers/message/unit-state.js';
 import { Vec2, Vec2T } from '../../flatbuffers/message/vec2.js';
 
@@ -37,9 +36,11 @@ name(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-controlledBy(obj?:Client):Client|null {
+controlledBy():string|null
+controlledBy(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+controlledBy(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new Client()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 state():UnitState {
@@ -86,7 +87,7 @@ unpack(): UnitT {
   return new UnitT(
     this.id(),
     this.name(),
-    (this.controlledBy() !== null ? this.controlledBy()!.unpack() : null),
+    this.controlledBy(),
     this.state(),
     (this.position() !== null ? this.position()!.unpack() : null)
   );
@@ -96,7 +97,7 @@ unpack(): UnitT {
 unpackTo(_o: UnitT): void {
   _o.id = this.id();
   _o.name = this.name();
-  _o.controlledBy = (this.controlledBy() !== null ? this.controlledBy()!.unpack() : null);
+  _o.controlledBy = this.controlledBy();
   _o.state = this.state();
   _o.position = (this.position() !== null ? this.position()!.unpack() : null);
 }
@@ -106,7 +107,7 @@ export class UnitT implements flatbuffers.IGeneratedObject {
 constructor(
   public id: number = 0,
   public name: string|Uint8Array|null = null,
-  public controlledBy: ClientT|null = null,
+  public controlledBy: string|Uint8Array|null = null,
   public state: UnitState = UnitState.Idle,
   public position: Vec2T|null = null
 ){}
@@ -114,7 +115,7 @@ constructor(
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const name = (this.name !== null ? builder.createString(this.name!) : 0);
-  const controlledBy = (this.controlledBy !== null ? this.controlledBy!.pack(builder) : 0);
+  const controlledBy = (this.controlledBy !== null ? builder.createString(this.controlledBy!) : 0);
 
   Unit.startUnit(builder);
   Unit.addId(builder, this.id);

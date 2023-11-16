@@ -1,19 +1,19 @@
 import { Container, Graphics } from "pixi.js";
 import { IScene } from "../Manager";
-import { PlayerT } from "../flatbuffers/game-state";
+import { UnitT } from "../flatbuffers/message";
 
-export class PlayerScene extends Container implements IScene {
-  public name: string = "PlayerScene";
+export class UnitScene extends Container implements IScene {
+  public name: string = "UnitScene";
   public id: number;
   public assetBundles: string[] = [];
   public g!: Graphics;
 
-  constructor(player: PlayerT) {
+  constructor(player: UnitT) {
     super();
     this.id = Number(player.id);
-    this.name = `PlayerScene ${player.id}`;
+    this.name = `UnitScene ${player.id}`;
     this.g = new Graphics();
-    this.g.beginFill(player.color || 0x000000);
+    this.g.beginFill(0x000000);
     this.g.drawCircle(0, 0, 25);
     this.g.endFill();
     this.addChild(this.g);
@@ -28,7 +28,7 @@ export class PlayerScene extends Container implements IScene {
 
     this.x = player.position?.x || 0;
     this.y = player.position?.y || 0;
-    this.angle = player.angle || 0;
+    this.angle = 0;
   }
 
   public constructorWithAwaits(): void {}

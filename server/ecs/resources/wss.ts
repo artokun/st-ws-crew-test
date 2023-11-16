@@ -59,14 +59,14 @@ export class WSS {
   send(clientId: string, message: string, sender = "server") {
     const ws = clients.get(clientId);
     if (ws) {
-      console.log(`Send (${sender}) to (${clientId}): ${message}`);
       ws.send(JSON.stringify({ sender, message }));
+      // console.debug(`Send (${sender}) to (${clientId}): ${message}`);
     }
   }
 
-  broadcast(message: string, sender = "server") {
+  broadcast(message: string | object, sender = "server") {
     wss.publish(sender, JSON.stringify({ sender, message }));
-    console.log(`Broadcast (${sender}): ${message}`);
+    // console.debug(`Broadcast (${sender}): ${JSON.stringify(message)}`);
   }
 
   broadcastBuffer(buffer: Uint8Array, topic = "server") {

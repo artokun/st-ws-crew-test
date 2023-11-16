@@ -21,7 +21,7 @@ struct Vec2 {
 table Unit {
   id: uint;
   name: string;
-  controlled_by: Client;
+  controlled_by: string;
   state: UnitState = 0;
   position: Vec2;
 }

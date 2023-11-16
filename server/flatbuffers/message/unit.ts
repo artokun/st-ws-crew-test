@@ -2,7 +2,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { Client } from '../../flatbuffers/message/client.js';
 import { UnitState } from '../../flatbuffers/message/unit-state.js';
 import { Vec2 } from '../../flatbuffers/message/vec2.js';
 
@@ -37,9 +36,11 @@ name(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-controlledBy(obj?:Client):Client|null {
+controlledBy():string|null
+controlledBy(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+controlledBy(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new Client()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 state():UnitState {

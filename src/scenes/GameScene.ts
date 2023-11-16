@@ -5,10 +5,11 @@ import {
   ClientAction,
   ClientUpdateEventT,
   InitClientEventT,
+  InitStateEventT,
   Message,
   MessageType,
 } from "../flatbuffers/message";
-import { ClientUpdateEvent } from "../../server/flatbuffers/message";
+import { UnitScene } from "./UnitScene";
 
 export class GameScene extends Container implements IScene {
   public name: string = "GameScene";
@@ -35,15 +36,6 @@ export class GameScene extends Container implements IScene {
     const gridWidth = Manager.width / gridSize;
     const gridHeight = Manager.height / gridSize;
 
-    // make main axis double width
-    const graphics = new Graphics();
-    graphics.lineStyle(2, 0x000000, 1);
-    graphics.moveTo(0, -Manager.height / 2);
-    graphics.lineTo(0, Manager.height / 2);
-    graphics.moveTo(-Manager.width / 2, 0);
-    graphics.lineTo(Manager.width / 2, 0);
-    this.gridGraphics.addChild(graphics);
-
     // make grid
     for (let i = 0; i < gridWidth; i++) {
       for (let j = 0; j < gridHeight; j++) {
@@ -57,6 +49,16 @@ export class GameScene extends Container implements IScene {
         this.gridGraphics.addChild(graphics);
       }
     }
+
+    // make main axis double width
+    const graphics = new Graphics();
+    graphics.lineStyle(2, 0x00ff00, 1);
+    graphics.moveTo(0, -Manager.height / 2);
+    graphics.lineTo(0, Manager.height / 2);
+    graphics.lineStyle(2, 0xff0000, 1);
+    graphics.moveTo(-Manager.width / 2, 0);
+    graphics.lineTo(Manager.width / 2, 0);
+    this.gridGraphics.addChild(graphics);
   }
 
   async message(message: MessageEvent) {
@@ -85,6 +87,15 @@ export class GameScene extends Container implements IScene {
               } just ${ClientAction[clientUpdateMessage.action]})`
             );
             break;
+          case MessageType.InitStateEvent:
+            const initStateMessage = event.message as InitStateEventT;
+            for (const unit of initStateMessage.units || []) {
+              const unitScene = new UnitScene(unit);
+              this.addChild(unitScene);
+            }
+            break;
+          default:
+            console.log("Unknown message type", event.messageType);
         }
         break;
       default:
