@@ -1,3 +1,5 @@
+include "shared.fbs";
+
 namespace flatbuffers.message;
 
 enum UnitState : byte {
@@ -10,20 +12,13 @@ enum ClientAction : byte {
   Left
 }
 
-// Structs
-
-struct Vec2 {
-  x: float;
-  y: float;
-}
-
 // Game Tables
 table Unit {
   id: uint;
   name: string;
   controlled_by: string;
   state: UnitState = 0;
-  position: Vec2;
+  position: flatbuffers.shared.Vec2;
 }
 
 table Client {
@@ -46,11 +41,16 @@ table InitStateEvent {
   units: [Unit];
 }
 
+table ServerStatEvent {
+  clients_connected: uint;
+}
+
 union MessageType {
   NoOpEvent,
   InitClientEvent,
   InitStateEvent,
-  ClientUpdateEvent
+  ClientUpdateEvent,
+  ServerStatEvent
 }
 
 table Message {

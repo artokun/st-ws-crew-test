@@ -4,6 +4,7 @@ import { ClientUpdateEvent } from '../../flatbuffers/message/client-update-event
 import { InitClientEvent } from '../../flatbuffers/message/init-client-event.js';
 import { InitStateEvent } from '../../flatbuffers/message/init-state-event.js';
 import { NoOpEvent } from '../../flatbuffers/message/no-op-event.js';
+import { ServerStatEvent } from '../../flatbuffers/message/server-stat-event.js';
 
 
 export enum MessageType {
@@ -11,34 +12,37 @@ export enum MessageType {
   NoOpEvent = 1,
   InitClientEvent = 2,
   InitStateEvent = 3,
-  ClientUpdateEvent = 4
+  ClientUpdateEvent = 4,
+  ServerStatEvent = 5
 }
 
 export function unionToMessageType(
   type: MessageType,
-  accessor: (obj:ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent) => ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|null
-): ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|null {
+  accessor: (obj:ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent) => ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent|null
+): ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent|null {
   switch(MessageType[type]) {
     case 'NONE': return null; 
     case 'NoOpEvent': return accessor(new NoOpEvent())! as NoOpEvent;
     case 'InitClientEvent': return accessor(new InitClientEvent())! as InitClientEvent;
     case 'InitStateEvent': return accessor(new InitStateEvent())! as InitStateEvent;
     case 'ClientUpdateEvent': return accessor(new ClientUpdateEvent())! as ClientUpdateEvent;
+    case 'ServerStatEvent': return accessor(new ServerStatEvent())! as ServerStatEvent;
     default: return null;
   }
 }
 
 export function unionListToMessageType(
   type: MessageType, 
-  accessor: (index: number, obj:ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent) => ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|null, 
+  accessor: (index: number, obj:ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent) => ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent|null, 
   index: number
-): ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|null {
+): ClientUpdateEvent|InitClientEvent|InitStateEvent|NoOpEvent|ServerStatEvent|null {
   switch(MessageType[type]) {
     case 'NONE': return null; 
     case 'NoOpEvent': return accessor(index, new NoOpEvent())! as NoOpEvent;
     case 'InitClientEvent': return accessor(index, new InitClientEvent())! as InitClientEvent;
     case 'InitStateEvent': return accessor(index, new InitStateEvent())! as InitStateEvent;
     case 'ClientUpdateEvent': return accessor(index, new ClientUpdateEvent())! as ClientUpdateEvent;
+    case 'ServerStatEvent': return accessor(index, new ServerStatEvent())! as ServerStatEvent;
     default: return null;
   }
 }

@@ -7,6 +7,7 @@ import { InitClientEvent, InitClientEventT } from '../../flatbuffers/message/ini
 import { InitStateEvent, InitStateEventT } from '../../flatbuffers/message/init-state-event.js';
 import { MessageType, unionToMessageType, unionListToMessageType } from '../../flatbuffers/message/message-type.js';
 import { NoOpEvent, NoOpEventT } from '../../flatbuffers/message/no-op-event.js';
+import { ServerStatEvent, ServerStatEventT } from '../../flatbuffers/message/server-stat-event.js';
 
 
 export class Message implements flatbuffers.IUnpackableObject<MessageT> {
@@ -94,7 +95,7 @@ unpackTo(_o: MessageT): void {
 export class MessageT implements flatbuffers.IGeneratedObject {
 constructor(
   public messageType: MessageType = MessageType.NONE,
-  public message: ClientUpdateEventT|InitClientEventT|InitStateEventT|NoOpEventT|null = null
+  public message: ClientUpdateEventT|InitClientEventT|InitStateEventT|NoOpEventT|ServerStatEventT|null = null
 ){}
 
 

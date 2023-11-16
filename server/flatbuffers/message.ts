@@ -8,6 +8,6 @@ export { InitStateEvent } from './message/init-state-event.js';
 export { Message } from './message/message.js';
 export { MessageType } from './message/message-type.js';
 export { NoOpEvent } from './message/no-op-event.js';
+export { ServerStatEvent } from './message/server-stat-event.js';
 export { Unit } from './message/unit.js';
 export { UnitState } from './message/unit-state.js';
-export { Vec2 } from './message/vec2.js';

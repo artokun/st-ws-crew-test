@@ -32,7 +32,6 @@ export class WSS {
           clients.set(ws.data.id, ws);
         },
         close: async (ws) => {
-          ws.unsubscribe("server");
           clients.delete(ws.data.id);
           emitter.clientDisconnected(ws);
         },
@@ -70,7 +69,7 @@ export class WSS {
   }
 
   broadcastBuffer(buffer: Uint8Array, topic = "server") {
-    wss.publish(topic, buffer);
+    wss.publish(topic, buffer, true);
   }
 
   sendBuffer(buffer: Uint8Array, clientId: string) {

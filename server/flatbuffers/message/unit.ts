@@ -3,7 +3,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { UnitState } from '../../flatbuffers/message/unit-state.js';
-import { Vec2 } from '../../flatbuffers/message/vec2.js';
+import { Vec2 } from '../../flatbuffers/shared/vec2.js';
 
 
 export class Unit {

@@ -1,20 +1,22 @@
-import { Commands, Entity, EventReader, Or, Query, Res, With } from "thyseus";
+import { Commands, Entity, EventReader, Query, Res, With } from "thyseus";
 import flatbuffers from "flatbuffers";
 import { ConnectEvent, DisconnectEvent } from "../events/connectionEvents";
 import { WSS } from "../resources/wss";
 import { Client } from "../entities/client";
 import {
+  ClientAction,
   Client as ClientFB,
+  ClientUpdateEvent,
   InitClientEvent,
   Message,
   MessageType,
   Unit,
-  Vec2,
 } from "../../flatbuffers/message";
 import { IsUnit } from "../components/is-unit";
 import { Position } from "../components/position";
 import { InitStateEvent } from "../../../src/flatbuffers/message";
 import { ControlledBy } from "../components/controlled-by";
+import { Vec2 } from "../../flatbuffers/shared";
 
 function createClientIdMessageBuffer(clientId: string) {
   const builder = new flatbuffers.Builder(1);
@@ -65,6 +67,34 @@ function createUnitPositionMessageBuffer(
   return builder.asUint8Array();
 }
 
+function createClientUpdateMessageBuffer(
+  client: Readonly<ConnectEvent | Client>,
+  action: ClientAction
+) {
+  const builder = new flatbuffers.Builder(1);
+  const clientId =
+    (client as Readonly<ConnectEvent>).clientId ??
+    (client as Readonly<Client>).id;
+  const id = builder.createString(clientId);
+  const name = builder.createString(
+    (client as Readonly<Client>).name ?? `anon-${clientId.split("-")[4]}`
+  );
+  ClientFB.startClient(builder);
+  ClientFB.addId(builder, id);
+  ClientFB.addName(builder, name);
+  const clientFb = ClientFB.endClient(builder);
+  ClientUpdateEvent.startClientUpdateEvent(builder);
+  ClientUpdateEvent.addClient(builder, clientFb);
+  ClientUpdateEvent.addAction(builder, action);
+  const eventFb = ClientUpdateEvent.endClientUpdateEvent(builder);
+  Message.startMessage(builder);
+  Message.addMessageType(builder, MessageType.ClientUpdateEvent);
+  Message.addMessage(builder, eventFb);
+  const messageFb = Message.endMessage(builder);
+  builder.finish(messageFb);
+  return builder.asUint8Array();
+}
+
 export function handleClientConnectSystem(
   connectEvents: EventReader<ConnectEvent>,
   units: Query<[Entity, Position, ControlledBy], With<IsUnit>>,
@@ -83,7 +113,12 @@ export function handleClientConnectSystem(
     const unitPositionMessageBuffer = createUnitPositionMessageBuffer(units);
     wss.sendBuffer(unitPositionMessageBuffer, client.clientId);
 
-    wss.broadcast({ type: "CLIENT_JOINED", data: client.clientId });
+    const clientJoinMessageBuffer = createClientUpdateMessageBuffer(
+      client,
+      ClientAction.Joined
+    );
+    wss.broadcastBuffer(clientJoinMessageBuffer);
+    // wss.broadcast({ type: "CLIENT_JOINED", data: client.clientId });
   }
 
   connectEvents.clear();
@@ -110,7 +145,11 @@ export function handleClientDisconnectSystem(
           (id) => id === client.id
         ) as string;
         console.log("client", clientId.split("-")[4], "disconnected");
-        wss.broadcast({ type: "CLIENT_LEFT", data: clientId }, "server");
+        const clientLeftMessageBuffer = createClientUpdateMessageBuffer(
+          { clientId },
+          ClientAction.Left
+        );
+        wss.broadcastBuffer(clientLeftMessageBuffer);
       }
     }
   }

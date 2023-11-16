@@ -71,15 +71,13 @@ export class GameScene extends Container implements IScene {
         const event = Message.getRootAsMessage(
           new flatbuffers.ByteBuffer(buffer)
         ).unpack();
-        console.log(event);
-
-        switch (event.messageType) {
-          case MessageType.InitClientEvent:
+        switch (event.message?.constructor) {
+          case InitClientEventT:
             const initClientMessage = event.message as InitClientEventT;
             Manager.ws.clientId = String(initClientMessage.client?.id);
-            console.log("CLIENT ID:", initClientMessage.client?.id);
+            console.debug("CLIENT ID:", initClientMessage.client?.id);
             break;
-          case MessageType.ClientUpdateEvent:
+          case ClientUpdateEventT:
             const clientUpdateMessage = event.message as ClientUpdateEventT;
             console.log(
               `Client ${clientUpdateMessage.client?.name} (${
@@ -87,7 +85,7 @@ export class GameScene extends Container implements IScene {
               } just ${ClientAction[clientUpdateMessage.action]})`
             );
             break;
-          case MessageType.InitStateEvent:
+          case InitStateEventT:
             const initStateMessage = event.message as InitStateEventT;
             for (const unit of initStateMessage.units || []) {
               const unitScene = new UnitScene(unit);
@@ -95,7 +93,7 @@ export class GameScene extends Container implements IScene {
             }
             break;
           default:
-            console.log("Unknown message type", event.messageType);
+            console.error("unknown GameScene event", event);
         }
         break;
       default:
