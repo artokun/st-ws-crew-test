@@ -1,8 +1,8 @@
-import { Container, Graphics } from "pixi.js";
-import { IScene } from "../Manager";
+import { Container, Graphics } from 'pixi.js';
+import { IScene } from '../types';
 
 export class TileScene extends Container implements IScene {
-  public name: string = "TileScene";
+  public name: string = 'TileScene';
   public id: number;
   public assetBundles: string[] = [];
   public g!: Graphics;
@@ -25,11 +25,11 @@ export class TileScene extends Container implements IScene {
 
   public constructorWithAwaits(): void {}
 
-  public message(message: MessageEvent): void {
+  public message(/* message: MessageEvent */): void {
     // To be a scene we must have the message method even if we don't use it.
   }
 
-  public update(framesPassed: number): void {
+  public update(/* framesPassed: number */): void {
     // To be a scene we must have the update method even if we don't use it.
   }
 }

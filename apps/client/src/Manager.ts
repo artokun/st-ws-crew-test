@@ -112,7 +112,7 @@ export class Manager {
       Manager.ws.close();
     }
 
-    let timeout: NodeJS.Timeout;
+    let timeout: Timer;
 
     return Promise.race<void>([
       new Promise((resolve) => {

@@ -1,31 +1,25 @@
-import { Container, Graphics, IDestroyOptions } from "pixi.js";
-import * as flatbuffers from "flatbuffers";
-import { IScene, Manager } from "../Manager";
-import {
-  ClientUpdateEventT,
-  InitClientEventT,
-  InitStateEventT,
-  Message,
-} from "models/message";
-import { ClientAction } from "models/client";
-import { UnitScene } from "./UnitScene";
+import { Container, Graphics } from 'pixi.js';
+import * as flatbuffers from 'flatbuffers';
+import { Manager } from '../Manager';
+import { ClientUpdateEventT, InitClientEventT, InitStateEventT, Message } from 'models/message';
+import { ClientAction } from 'models/client';
+import { UnitScene } from './UnitScene';
+import { IScene } from '../types';
 
 export class GameScene extends Container implements IScene {
-  public name: string = "GameScene";
-  assetBundles: string[] = ["game", "sounds"];
+  public name: string = 'GameScene';
+  assetBundles: string[] = ['game', 'sounds'];
   gridGraphics!: Container;
-
-  constructor() {
-    super(); // Mandatory! This calls the superclass constructor.
-  }
 
   constructorWithAwaits(): void {
     this.createGrid();
 
-    Manager.ws.send("connected");
+    Manager.ws.send('connected');
   }
 
-  update(framesPassed: number): void {}
+  public update(/* framesPassed: number */): void {
+    // To be a scene we must have the update method even if we don't use it.
+  }
 
   createGrid(): void {
     this.gridGraphics = new Container();
@@ -41,10 +35,7 @@ export class GameScene extends Container implements IScene {
         const graphics = new Graphics();
         graphics.lineStyle(1, 0x000000, 0.5);
         graphics.drawRect(0, 0, gridSize, gridSize);
-        graphics.position.set(
-          i * gridSize - Manager.width / 2,
-          j * gridSize - Manager.height / 2
-        );
+        graphics.position.set(i * gridSize - Manager.width / 2, j * gridSize - Manager.height / 2);
         this.gridGraphics.addChild(graphics);
       }
     }
@@ -62,45 +53,43 @@ export class GameScene extends Container implements IScene {
 
   async message(message: MessageEvent) {
     switch (typeof message.data) {
-      case "string":
+      case 'string':
         console.log(`${this.name}: ${message.data}`);
         break;
-      case "object":
+      case 'object': {
         const buffer = new Uint8Array(await message.data.arrayBuffer());
-        const event = Message.getRootAsMessage(
-          new flatbuffers.ByteBuffer(buffer)
-        ).unpack();
+        const event = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer)).unpack();
         switch (event.message?.constructor) {
-          case InitClientEventT:
-            const initClientMessage = event.message as InitClientEventT;
-            Manager.ws.clientId = String(initClientMessage.client?.id);
-            console.debug("CLIENT ID:", initClientMessage.client?.id);
+          case InitClientEventT: {
+            const { client } = event.message as InitClientEventT;
+            Manager.ws.clientId = String(client?.id);
+            console.debug('CLIENT ID:', client?.id);
             break;
-          case ClientUpdateEventT:
-            const clientUpdateMessage = event.message as ClientUpdateEventT;
-            console.log(
-              `Client ${clientUpdateMessage.client?.name} (${
-                clientUpdateMessage.client?.id
-              } just ${ClientAction[clientUpdateMessage.action]})`
-            );
+          }
+          case ClientUpdateEventT: {
+            const { client, action } = event.message as ClientUpdateEventT;
+            console.log(`Client ${client?.name} (${client?.id} just ${ClientAction[action]})`);
             break;
-          case InitStateEventT:
-            const initStateMessage = event.message as InitStateEventT;
-            for (const unit of initStateMessage.units || []) {
+          }
+          case InitStateEventT: {
+            const { units } = event.message as InitStateEventT;
+            for (const unit of units || []) {
               const unitScene = new UnitScene(unit);
               this.addChild(unitScene);
             }
             break;
+          }
           default:
-            console.error("unknown GameScene event", event);
+            console.error('unknown GameScene event', event);
         }
         break;
+      }
       default:
         console.log(`${this.name}: ${message.data}`);
     }
   }
 
-  destroy(options?: boolean | IDestroyOptions | undefined): void {
-    Manager.ws.removeEventListener("message", this.message);
+  destroy(/* options?: boolean | IDestroyOptions | undefined */): void {
+    Manager.ws.removeEventListener('message', this.message);
   }
 }
