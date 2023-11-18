@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import * as flatbuffers from 'flatbuffers';
 import { Manager } from '../Manager';
-import { ClientUpdateEventT, InitClientEventT, InitStateEventT, Message } from 'models/message';
+import { ClientUpdateEventT, InitClientEventT, InitStateEventT, Message, ServerStatEventT } from 'models/message';
 import { ClientAction } from 'models/client';
 import { UnitScene } from './UnitScene';
 import { IScene } from '../types';
@@ -77,6 +77,11 @@ export class GameScene extends Container implements IScene {
               const unitScene = new UnitScene(unit);
               this.addChild(unitScene);
             }
+            break;
+          }
+          case ServerStatEventT: {
+            const { clientsConnected } = event.message as ServerStatEventT;
+            console.log(`Clients connected: ${clientsConnected}`);
             break;
           }
           default:
