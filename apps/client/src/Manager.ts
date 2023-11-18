@@ -1,6 +1,7 @@
-import { Application, Assets, DisplayObject } from "pixi.js";
-import { Viewport } from "pixi-viewport";
-import { manifest } from "./assets";
+import { Application, Assets } from 'pixi.js';
+import { Viewport } from 'pixi-viewport';
+import { manifest } from './assets';
+import { IScene } from './types';
 
 const WORLD_WIDTH = 2000;
 const WORLD_HEIGHT = 2000;
@@ -10,28 +11,23 @@ interface GameWebSocket extends WebSocket {
 }
 
 export class Manager {
-  private constructor() {}
-
   private static app: Application;
   private static currentScene: IScene;
 
   public static viewport: Viewport;
   public static ws: GameWebSocket;
   public static get screenWidth(): number {
-    return Math.max(
-      document.documentElement.clientWidth,
-      window.innerWidth || 0
-    );
+    return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   }
+
   public static get screenHeight(): number {
-    return Math.max(
-      document.documentElement.clientHeight,
-      window.innerHeight || 0
-    );
+    return Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   }
+
   public static get width(): number {
     return Manager.viewport.worldWidth;
   }
+
   public static get height(): number {
     return Manager.viewport.worldHeight;
   }
@@ -43,7 +39,7 @@ export class Manager {
   public static initialize(background: number): void {
     // Create our pixi app
     Manager.app = new Application({
-      view: document.getElementById("pixi-canvas") as HTMLCanvasElement,
+      view: document.getElementById('pixi-canvas') as HTMLCanvasElement,
       resizeTo: window,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
@@ -51,7 +47,7 @@ export class Manager {
     });
 
     // Initialize pixi debugger
-    // @ts-ignore
+    // @ts-expect-error - pixijs/pixijs#7078
     window.__PIXI_APP__ = Manager.app;
 
     // Create the viewport
@@ -95,53 +91,49 @@ export class Manager {
     Manager.app.ticker.add(Manager.update);
 
     // listen for the browser telling us that the screen size changed
-    window.addEventListener("resize", Manager.resize);
+    window.addEventListener('resize', Manager.resize);
 
     // call it manually once so we are sure we are the correct size after starting
     Manager.resize();
 
     // We store it to be sure we can use Assets later on
-    Manager.initializeAssetsPromise = Assets.init({ manifest: manifest });
+    Manager.initializeAssetsPromise = Assets.init({ manifest });
 
     // Black js magic to extract the bundle names into an array.
     const bundleNames = manifest.bundles.map((b) => b.name);
 
     // Initialize the assets and then start downloading the bundles in the background
-    Manager.initializeAssetsPromise.then(() =>
-      Assets.backgroundLoadBundle(bundleNames)
-    );
+    Manager.initializeAssetsPromise.then(() => Assets.backgroundLoadBundle(bundleNames));
   }
 
   public static async initializeWebsocket(): Promise<void> {
-    console.log("Initializing GameServer connection");
+    console.log('Initializing GameServer connection');
     if (Manager.ws) {
       Manager.ws.close();
-      // @ts-ignore
-      Manager.ws = undefined;
     }
 
     let timeout: NodeJS.Timeout;
 
     return Promise.race<void>([
       new Promise((resolve) => {
-        Manager.ws = new WebSocket("ws://localhost:3001") as GameWebSocket;
+        Manager.ws = new WebSocket('ws://localhost:3001') as GameWebSocket;
         Manager.ws.onopen = () => {
-          console.log("GameServer connection established");
+          console.log('GameServer connection established');
           clearTimeout(timeout);
           resolve();
         };
         Manager.ws.onclose = () => {
-          console.log("GameServer connection closed, retrying...");
+          console.log('GameServer connection closed, retrying...');
 
           setTimeout(() => {
             location.reload();
           }, 1000);
         };
       }),
-      new Promise((reject) => {
+      new Promise((resolve) => {
         timeout = setTimeout(() => {
-          console.log("GameServer connection timed out. retrying...");
-          reject();
+          console.log('GameServer connection timed out. retrying...');
+          resolve();
         }, 5000);
       }),
     ]).catch(() => Manager.initializeWebsocket());
@@ -158,20 +150,11 @@ export class Manager {
     }
 
     // current screen size
-    const screenWidth = Math.max(
-      document.documentElement.clientWidth,
-      window.innerWidth || 0
-    );
-    const screenHeight = Math.max(
-      document.documentElement.clientHeight,
-      window.innerHeight || 0
-    );
+    const screenWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const screenHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
     // uniform scale for our game
-    const scale = Math.min(
-      screenWidth / Manager.screenWidth,
-      screenHeight / Manager.screenHeight
-    );
+    const scale = Math.min(screenWidth / Manager.screenWidth, screenHeight / Manager.screenHeight);
 
     // the "uniformly englarged" size for our game
     const enlargedWidth = Math.floor(scale * Manager.screenWidth);
@@ -184,13 +167,13 @@ export class Manager {
     // now we use css trickery to set the sizes and margins
     Manager.app.view.style!.width = `${enlargedWidth}px`;
     Manager.app.view.style!.height = `${enlargedHeight}px`;
-    // @ts-ignore
+    // @ts-expect-error - margin does not exist on style dom
     Manager.app.view.style!.marginLeft =
-      // @ts-ignore
+      // @ts-expect-error - margin does not exist on style dom
       Manager.app.view.style!.marginRight = `${horizontalMargin}px`;
-    // @ts-ignore
+    // @ts-expect-error - margin does not exist on style dom
     Manager.app.view.style!.marginTop =
-      // @ts-ignore
+      // @ts-expect-error - margin does not exist on style dom
       Manager.app.view.style!.marginBottom = `${verticalMargin}px`;
   }
 
@@ -208,15 +191,12 @@ export class Manager {
     // If you were to show a loading thingy, this will be the place to show it...
 
     // Now, let's start downloading the assets we need and wait for them...
-    await Promise.all([
-      Assets.loadBundle(newScene.assetBundles),
-      Manager.initializeWebsocketPromise,
-    ]);
+    await Promise.all([Assets.loadBundle(newScene.assetBundles), Manager.initializeWebsocketPromise]);
 
     // If you have shown a loading thingy, this will be the place to hide it...
 
     // we listen for messages from the server
-    Manager.ws.addEventListener("message", newScene.message.bind(newScene));
+    Manager.ws.addEventListener('message', newScene.message.bind(newScene));
 
     // when we have assets and a stable socket connection, we tell that scene
     newScene.constructorWithAwaits();
@@ -234,12 +214,4 @@ export class Manager {
       Manager.currentScene.update(framesPassed);
     }
   }
-}
-
-export interface IScene extends DisplayObject {
-  name: string;
-  update(framesPassed: number): void;
-  message<T>(message: MessageEvent<T>): void;
-  constructorWithAwaits(): void;
-  assetBundles: string[];
 }

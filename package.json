@@ -11,7 +11,18 @@
     "dev:server": "cd apps/server && npm run dev",
     "dev:models": "cd packages/models && npm run dev"
   },
-  "dependencies": {
-    "npm-run-all": "^4.1.5"
+  "devDependencies": {
+    "@types/node": "^20.9.1",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.1.0",
+    "typescript": "^5.2.2"
   }
 }
