@@ -1,4 +1,4 @@
-import { struct, f64 } from "thyseus";
+import { struct, f64 } from 'thyseus';
 
 @struct
 export class Vec2 {

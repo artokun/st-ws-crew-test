@@ -2,5 +2,5 @@
 
 export enum UnitState {
   Idle = 0,
-  Moving = 1
+  Moving = 1,
 }

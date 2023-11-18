@@ -1,13 +1,13 @@
-import { struct } from "thyseus";
+import { struct } from 'thyseus';
 
 @struct
 export class Client {
   id: string;
   name: string;
 
-  constructor(id = "") {
+  constructor(id = '') {
     this.id = id;
-    this.name = "";
+    this.name = '';
   }
 
   setName(name: string) {

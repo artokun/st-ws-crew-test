@@ -1,7 +1,7 @@
-import { EventWriter, struct } from "thyseus";
-import { emitter } from "../../emitter";
-import { ServerWebSocket } from "bun";
-import { ServerParams } from "../../types";
+import { EventWriter, struct } from 'thyseus';
+import { emitter } from '../../emitter';
+import { ServerWebSocket } from 'bun';
+import { ServerParams } from '../../types';
 
 @struct
 export class ConnectEvent {

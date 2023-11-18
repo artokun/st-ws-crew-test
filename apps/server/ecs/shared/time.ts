@@ -1,4 +1,4 @@
-import { struct, type f32 } from "thyseus";
+import { struct, type f32 } from 'thyseus';
 
 @struct
 export class Time {

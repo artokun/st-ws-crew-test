@@ -1,5 +1,5 @@
-import { World, DefaultSchedule } from "thyseus";
-import { LOOP_STEP_MS } from "../constants";
+import { World, DefaultSchedule } from 'thyseus';
+import { LOOP_STEP_MS } from '../constants';
 
 /**
  * Runs the default schedule in a loop with a fixed time step.

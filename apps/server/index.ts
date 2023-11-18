@@ -1,1 +1,1 @@
-import "./ecs";
+import './ecs';

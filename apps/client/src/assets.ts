@@ -1,16 +1,16 @@
-import type { AssetsManifest } from "pixi.js";
+import type { AssetsManifest } from 'pixi.js';
 
 export const manifest: AssetsManifest = {
   bundles: [
     {
-      name: "game",
+      name: 'game',
       assets: {
-        bunny: "/images/bunny.png",
+        bunny: '/images/bunny.png',
         // bg: "/images/basic.png",
       },
     },
     {
-      name: "sounds",
+      name: 'sounds',
       assets: {},
     },
   ],

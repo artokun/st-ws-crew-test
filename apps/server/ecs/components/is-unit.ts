@@ -1,4 +1,4 @@
-import { struct } from "thyseus";
+import { struct } from 'thyseus';
 
 @struct
 export class IsUnit {}

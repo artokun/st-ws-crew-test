@@ -1,21 +1,15 @@
-import { Commands, Entity, EventReader, Query, Res, With } from "thyseus";
-import flatbuffers from "flatbuffers";
-import { ConnectEvent, DisconnectEvent } from "../events/connectionEvents";
-import { WSS } from "../resources/wss";
-import { Client } from "../entities/client";
-import { IsUnit } from "../components/is-unit";
-import { Position } from "../components/position";
-import { ControlledBy } from "../components/controlled-by";
-import { Unit } from "models/unit";
-import { Vec2 } from "models/shared";
-import {
-  ClientUpdateEvent,
-  InitClientEvent,
-  InitStateEvent,
-  Message,
-  MessageType,
-} from "models/message";
-import { ClientAction, Client as ClientFB } from "models/client";
+import { Commands, Entity, EventReader, Query, Res, With } from 'thyseus';
+import flatbuffers from 'flatbuffers';
+import { ConnectEvent, DisconnectEvent } from '../events/connectionEvents';
+import { WSS } from '../resources/wss';
+import { Client } from '../entities/client';
+import { IsUnit } from '../components/is-unit';
+import { Position } from '../components/position';
+import { ControlledBy } from '../components/controlled-by';
+import { Unit } from 'models/unit';
+import { Vec2 } from 'models/shared';
+import { ClientUpdateEvent, InitClientEvent, InitStateEvent, Message, MessageType } from 'models/message';
+import { ClientAction, Client as ClientFB } from 'models/client';
 
 function createClientIdMessageBuffer(clientId: string) {
   const builder = new flatbuffers.Builder(1);
@@ -34,25 +28,20 @@ function createClientIdMessageBuffer(clientId: string) {
   return builder.asUint8Array();
 }
 
-function createUnitPositionMessageBuffer(
-  units: Query<[Entity, Position, ControlledBy], With<IsUnit>>
-) {
+function createUnitPositionMessageBuffer(units: Query<[Entity, Position, ControlledBy], With<IsUnit>>) {
   const builder = new flatbuffers.Builder(1);
   const unitsVector: number[] = [];
   for (const [entity, position, controlledBy] of units) {
     const x = position.x;
     const y = position.y;
-    const controlledById = builder.createString(controlledBy.clientId ?? "");
+    const controlledById = builder.createString(controlledBy.clientId ?? '');
     Unit.startUnit(builder);
     Unit.addId(builder, Number(entity.id));
     Unit.addPosition(builder, Vec2.createVec2(builder, x, y));
     Unit.addControlledBy(builder, controlledById); // TODO
     unitsVector.push(Unit.endUnit(builder));
   }
-  const unitsVectorOffset = InitStateEvent.createUnitsVector(
-    builder,
-    unitsVector
-  );
+  const unitsVectorOffset = InitStateEvent.createUnitsVector(builder, unitsVector);
 
   InitStateEvent.startInitStateEvent(builder);
   InitStateEvent.addUnits(builder, unitsVectorOffset);
@@ -66,18 +55,11 @@ function createUnitPositionMessageBuffer(
   return builder.asUint8Array();
 }
 
-function createClientUpdateMessageBuffer(
-  client: Readonly<ConnectEvent | Client>,
-  action: ClientAction
-) {
+function createClientUpdateMessageBuffer(client: Readonly<ConnectEvent | Client>, action: ClientAction) {
   const builder = new flatbuffers.Builder(1);
-  const clientId =
-    (client as Readonly<ConnectEvent>).clientId ??
-    (client as Readonly<Client>).id;
+  const clientId = (client as Readonly<ConnectEvent>).clientId ?? (client as Readonly<Client>).id;
   const id = builder.createString(clientId);
-  const name = builder.createString(
-    (client as Readonly<Client>).name ?? `anon-${clientId.split("-")[4]}`
-  );
+  const name = builder.createString((client as Readonly<Client>).name ?? `anon-${clientId.split('-')[4]}`);
   ClientFB.startClient(builder);
   ClientFB.addId(builder, id);
   ClientFB.addName(builder, name);
@@ -104,7 +86,7 @@ export function handleClientConnectSystem(
 
   for (const client of connectEvents) {
     commands.spawn().add(new Client(client.clientId));
-    console.log("client", client.clientId.split("-")[4], "connected");
+    console.log('client', client.clientId.split('-')[4], 'connected');
 
     const messageBuffer = createClientIdMessageBuffer(client.clientId);
     wss.sendBuffer(messageBuffer, client.clientId);
@@ -112,10 +94,7 @@ export function handleClientConnectSystem(
     const unitPositionMessageBuffer = createUnitPositionMessageBuffer(units);
     wss.sendBuffer(unitPositionMessageBuffer, client.clientId);
 
-    const clientJoinMessageBuffer = createClientUpdateMessageBuffer(
-      client,
-      ClientAction.Joined
-    );
+    const clientJoinMessageBuffer = createClientUpdateMessageBuffer(client, ClientAction.Joined);
     wss.broadcastBuffer(clientJoinMessageBuffer);
     // wss.broadcast({ type: "CLIENT_JOINED", data: client.clientId });
   }
@@ -140,14 +119,9 @@ export function handleClientDisconnectSystem(
     for (const [entity, client] of clients) {
       if (disconnectingClients.includes(client.id)) {
         commands.despawn(entity);
-        const clientId = disconnectingClients.find(
-          (id) => id === client.id
-        ) as string;
-        console.log("client", clientId.split("-")[4], "disconnected");
-        const clientLeftMessageBuffer = createClientUpdateMessageBuffer(
-          { clientId },
-          ClientAction.Left
-        );
+        const clientId = disconnectingClients.find((id) => id === client.id) as string;
+        console.log('client', clientId.split('-')[4], 'disconnected');
+        const clientLeftMessageBuffer = createClientUpdateMessageBuffer({ clientId }, ClientAction.Left);
         wss.broadcastBuffer(clientLeftMessageBuffer);
       }
     }
