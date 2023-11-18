@@ -1,4 +1,4 @@
-import { Application, Assets, DisplayObject, Graphics } from "pixi.js";
+import { Application, Assets, DisplayObject } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { manifest } from "./assets";
 
