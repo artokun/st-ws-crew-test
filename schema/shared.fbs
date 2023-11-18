@@ -1,7 +1,0 @@
-namespace flatbuffers.shared;
-// Structs
-
-struct Vec2 {
-  x: float;
-  y: float;
-}

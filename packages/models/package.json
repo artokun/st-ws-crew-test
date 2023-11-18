@@ -1,0 +1,11 @@
+{
+  "name": "models",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --ext fbs --watch ./sc --exec \"npm run generate\"",
+    "generate": "flatc --gen-object-api --ts schemas/*.fbs"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

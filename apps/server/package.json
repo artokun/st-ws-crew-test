@@ -1,0 +1,22 @@
+{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server/index.ts",
+    "dev": "nodemon --ext ts --delay 0.1 --watch ./ --exec \"bun run index.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "20.8.3",
+    "bun-types": "latest",
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "@thyseus/rollup-plugin-thyseus": "0.15.0",
+    "bun": "latest",
+    "eventemitter3": "^5.0.1",
+    "flatbuffers": "^23.5.26",
+    "thyseus": "0.15.0",
+    "typescript": "latest",
+    "models": "workspace:*"
+  }
+}

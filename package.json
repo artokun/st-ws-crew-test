@@ -1,30 +1,17 @@
 {
-  "name": "rt-api-prototype",
-  "module": "index.ts",
-  "type": "module",
+  "name": "rt-api",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "watch:client": "bunx --bun vite --host",
-    "watch:server": "nodemon --ext ts --delay 0.1 --watch ./server --exec \"bun run server/index.ts\"",
-    "watch:fltbuf": "nodemon --ext fbs --watch ./schema --exec \"sh lib/generate-fbb.sh\"",
-    "dev": "concurrently \"npm:watch:*\""
-  },
-  "devDependencies": {
-    "@types/node": "20.8.3",
-    "@types/react": "18.2.25",
-    "bun-types": "latest",
-    "concurrently": "^8.2.1"
+    "dev": "npm-run-all --parallel dev:*",
+    "dev:client": "cd apps/client && npm run dev",
+    "dev:server": "cd apps/server && npm run dev",
+    "dev:models": "cd packages/models && npm run dev"
   },
   "dependencies": {
-    "@thyseus/rollup-plugin-thyseus": "0.15.0",
-    "bun": "latest",
-    "eventemitter3": "^5.0.1",
-    "flatbuffers": "^23.5.26",
-    "nodemon": "^3.0.1",
-    "pixi-viewport": "^5.0.2",
-    "pixi.js": "7.3.1",
-    "react": "^18.2.0",
-    "thyseus": "0.15.0",
-    "typescript": "latest",
-    "vite": "latest"
+    "npm-run-all": "^4.1.5"
   }
 }
