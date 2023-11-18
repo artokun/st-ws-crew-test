@@ -1,4 +1,4 @@
-import { Container, Graphics, Assets } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 
 export class LoaderScene extends Container implements IScene {

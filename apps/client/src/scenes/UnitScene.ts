@@ -1,6 +1,6 @@
 import { Container, Graphics } from "pixi.js";
 import { IScene } from "../Manager";
-import { UnitT } from "../flatbuffers/message";
+import { UnitT } from "models/unit";
 
 export class UnitScene extends Container implements IScene {
   public name: string = "UnitScene";
