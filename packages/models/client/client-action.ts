@@ -2,5 +2,5 @@
 
 export enum ClientAction {
   Joined = 0,
-  Left = 1,
+  Left = 1
 }
